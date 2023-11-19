@@ -53,10 +53,11 @@ constexpr bool IsLowerCase(uint8_t ch) noexcept {
 using FuncPtrRaw = void (__cdecl *)(void);
 using FuncPtrD_D = double (__cdecl *)(double x);
 using FuncPtrDD_D = double (__cdecl *)(double x, double y);
-FuncPtrRaw CastFuncPtr(FuncPtrD_D func) noexcept {
+// TODO: use __builtin_bit_cast()
+FuncPtrRaw FromFuncD_D(FuncPtrD_D func) noexcept {
 	return reinterpret_cast<FuncPtrRaw>(func);
 }
-FuncPtrRaw CastFuncPtr(FuncPtrDD_D func) noexcept {
+FuncPtrRaw FromFuncDD_D(FuncPtrDD_D func) noexcept {
 	return reinterpret_cast<FuncPtrRaw>(func);
 }
 
@@ -76,8 +77,8 @@ struct FunctionInfo {
 constexpr unsigned maxFuncNameLen = 5;
 constexpr double MATH_E = 2.71828182845904523536;
 constexpr double MATH_PI = 3.14159265358979323846;
-#define MakeD_D(name, func)		{sizeof(name) - 1, Signature::D_D, name, CastFuncPtr(func)}
-#define MakeDD_D(name, func)	{sizeof(name) - 1, Signature::DD_D, name, CastFuncPtr(func)}
+#define MakeD_D(name, func)		{sizeof(name) - 1, Signature::D_D, name, FromFuncD_D(func)}
+#define MakeDD_D(name, func)	{sizeof(name) - 1, Signature::DD_D, name, FromFuncDD_D(func)}
 // https://en.cppreference.com/w/cpp/numeric/math
 // https://docs.python.org/3/library/math.html
 const FunctionInfo functionList[] = {
@@ -385,15 +386,15 @@ double Context::Evaluate(const char *input, Precedence parent) noexcept {
 				}
 				break;
 			case Operator::Ternary:
+				has_value = false;
 				if (*input == ':') {
 					const double right = Evaluate(input + 1, precedence);
 					input = endPtr;
 					if (!failure) {
+						has_value = true;
 						result = result ? value : right;
-						break;
 					}
 				}
-				has_value = false;
 				break;
 			default:
 				break;
