@@ -45,9 +45,11 @@ enum class Operator : uint8_t {
 constexpr bool IsSpace(uint8_t ch) noexcept {
 	return ch <= ' ';
 }
-
-constexpr bool IsLowerCase(uint8_t ch) noexcept {
+constexpr bool IsFuncNameStart(uint8_t ch) noexcept {
 	return (ch >= 'a' && ch <= 'z');
+}
+constexpr bool IsFuncNameChar(uint8_t ch) noexcept {
+	return (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9');
 }
 
 using FuncPtrRaw = void (__cdecl *)(void);
@@ -160,7 +162,7 @@ double Context::Evaluate(const char *input, Precedence parent) noexcept {
 			}
 			++input;
 			has_value = true;
-		} else if (IsLowerCase(ch)) {
+		} else if (IsFuncNameStart(ch)) {
 			if (has_value) {
 				has_value = false;
 				break;
@@ -419,7 +421,7 @@ double Context::EvaluateFunction(const char *input) noexcept {
 	do {
 		++len;
 		++ptr;
-	} while (IsLowerCase(*ptr));
+	} while (IsFuncNameChar(*ptr));
 	if (len == 1) {
 		if (*input == 'e') {
 			has_value = true;
