@@ -1,0 +1,12 @@
+.vs
+x64
+Debug
+Release
+*.exe
+*.obj
+*.o
+*.asm
+*.s
+*.cod
+*.log
+*.user
