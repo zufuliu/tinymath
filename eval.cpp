@@ -70,17 +70,17 @@ enum class Signature : uint8_t {
 };
 
 struct FunctionInfo {
-	unsigned len;
-	Signature signature;
-	const char *name;
+	const unsigned magic;
+	const Signature signature;
+	const char * const name;
 	FuncPtrRaw func;
 };
 
 constexpr unsigned maxFuncNameLen = 5;
 constexpr double MATH_E = 2.71828182845904523536;
 constexpr double MATH_PI = 3.14159265358979323846;
-#define MakeD_D(name, func)		{sizeof(name) - 1, Signature::D_D, name, FromFuncD_D(func)}
-#define MakeDD_D(name, func)	{sizeof(name) - 1, Signature::DD_D, name, FromFuncDD_D(func)}
+#define MakeD_D(name, func)		{(sizeof(name) - 1) | (uint8_t((name)[0]) << 8), Signature::D_D, (name), FromFuncD_D(func)}
+#define MakeDD_D(name, func)	{(sizeof(name) - 1) | (uint8_t((name)[0]) << 8), Signature::DD_D, (name), FromFuncDD_D(func)}
 // https://en.cppreference.com/w/cpp/numeric/math
 // https://docs.python.org/3/library/math.html
 const FunctionInfo functionList[] = {
@@ -422,25 +422,14 @@ double Context::EvaluateFunction(const char *input) noexcept {
 		++len;
 		++ptr;
 	} while (IsFuncNameChar(*ptr));
-	if (len == 1) {
-		if (*input == 'e') {
-			has_value = true;
-			input = ptr;
-			result = MATH_E;
-		}
-	} else if (len == 2) {
-		if (len == 2 && input[0] == 'p' && input[1] == 'i') {
-			has_value = true;
-			input = ptr;
-			result = MATH_PI;
-		}
-	} else if (len <= maxFuncNameLen) {
-		while (*ptr && IsSpace(*ptr)) {
-			++ptr;
-		}
-		if (*ptr == '(') {
+	while (*ptr && IsSpace(*ptr)) {
+		++ptr;
+	}
+	if (*ptr == '(') { // function
+		if (len <= maxFuncNameLen) {
+			const unsigned magic = len | (uint8_t(input[0]) << 8);
 			for (const FunctionInfo &info : functionList) {
-				if (len == info.len && memcmp(info.name, input, len) == 0) {
+				if (magic == info.magic && memcmp(info.name, input, len) == 0) {
 					input = ptr;
 					const double arg1 = Evaluate(input + 1, Precedence::Primary);
 					input = endPtr;
@@ -449,21 +438,33 @@ double Context::EvaluateFunction(const char *input) noexcept {
 						if (info.signature == Signature::D_D) {
 							++input;
 							has_value = true;
-							FuncPtrD_D func = reinterpret_cast<FuncPtrD_D>(info.func);
-							result = func(arg1);
+							result = (reinterpret_cast<FuncPtrD_D>(info.func))(arg1);
 						} else {
 							const double arg2 = Evaluate(input + 1, Precedence::Primary);
 							input = endPtr;
 							if (!failure && *input == ')') {
 								++input;
 								has_value = true;
-								FuncPtrDD_D func = reinterpret_cast<FuncPtrDD_D>(info.func);
-								result = func(arg1, arg2);
+								result = (reinterpret_cast<FuncPtrDD_D>(info.func))(arg1, arg2);
 							}
 						}
 					}
 					break;
 				}
+			}
+		}
+	} else { // variable
+		if (len == 1) {
+			if (*input == 'e') {
+				has_value = true;
+				input = ptr;
+				result = MATH_E;
+			}
+		} else if (len == 2) {
+			if (len == 2 && input[0] == 'p' && input[1] == 'i') {
+				has_value = true;
+				input = ptr;
+				result = MATH_PI;
 			}
 		}
 	}
