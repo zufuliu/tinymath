@@ -406,7 +406,7 @@ double Context::Evaluate(const char *input, Precedence parent) noexcept {
 			}
 		}
 	}
-	if (!has_value) {
+	if (!has_value || (parent == Precedence::None && *input)) {
 		failure = true;
 	}
 	endPtr = const_cast<char *>(input);
