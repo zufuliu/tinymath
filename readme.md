@@ -51,8 +51,8 @@ See https://en.cppreference.com/w/cpp/language/operator_precedence, https://docs
 | [`double floor(double x)`](https://en.cppreference.com/w/cpp/numeric/math/floor) |
 | [`double round(double x)`](https://en.cppreference.com/w/cpp/numeric/math/round) |
 | [`double trunc(double x)`](https://en.cppreference.com/w/cpp/numeric/math/trunc) |
-| [`double min(double x)`](https://en.cppreference.com/w/cpp/numeric/math/fmin) |
-| [`double max(double x)`](https://en.cppreference.com/w/cpp/numeric/math/fmax) |
+| [`double min(double x, double y)`](https://en.cppreference.com/w/cpp/numeric/math/fmin) |
+| [`double max(double x, double y)`](https://en.cppreference.com/w/cpp/numeric/math/fmax) |
 | [`double cbrt(double x)`](https://en.cppreference.com/w/cpp/numeric/math/cbrt) |
 | [`double exp(double x)`](https://en.cppreference.com/w/cpp/numeric/math/exp) |
 | [`double exp2(double x)`](https://en.cppreference.com/w/cpp/numeric/math/exp2) |
